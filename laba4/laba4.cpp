@@ -1,108 +1,97 @@
-﻿//Доделать ошибку со сравнением элемента а и суммы строки и столбца
-#include <string>
+﻿#include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 
+
 using namespace std;
+
 
 typedef double elemtype;
 typedef elemtype** matrtype;
 
-union errUnion
+
+union error_checker_union
 {
-	int problem_otkr;
+	int problema_otkrytia;
 	struct {
-		int nomer_str;
-		int nomer_elem;
-		int plase;
+		int nomer_stroki;
+		int nomer_elementa;
+		int place_error;
 		string* posled;
-		int oshib_sravn;
 	};
-	int nepryam;
-	int* nomerstr;
+	int nepryamougolnaya;
+	int* nomer_stroki_ukaz;
 };
 
-enum myenum { 
-	oshib_otkr = -1, 
-	good, 
-	false_zhach, 
-	nepryam, 
-	nodata, 
-	mass_pointer,
-	mass_rows, 
-	unerror, 
-	file_error 
+
+enum error_checker { 
+	oshibka_otkrtia_case = -1, 
+	good_case, 
+	nevern_znachenie_case, 
+	nepryamoug_case, 
+	net_dannh_case, 
+	massiv_ukazatel,
+	massiv_stroki, 
+	net_oshidki_case, 
+	oshibka_file_case 
 };
 
-bool mass_plus(int*& mass, int& size, int value) {
-	int* newmass = new (nothrow) int[size + 1];
-	if (!newmass)
-		return false;
-	for (int i = 0; i < size; i++) {
-		newmass[i] = mass[i];
-	}
-	newmass[size] = value;
-	size++;
-	delete[] mass;
-	mass = newmass;
-	return true;
-}
 
-void zagruzka_matr(ifstream& file, matrtype matr, int str, int stolb) {
+void zagruzka_matr(ifstream& file, matrtype matriza, int stroka, int stolbec) {
 	file.seekg(0);
-	for (int i = 0; i < str; i++) {
-		for (int j = 0; j < stolb; j++) {
-			file >> matr[i][j];
+	for (int i = 0; i < stroka; i++) {
+		for (int j = 0; j < stolbec; j++) {
+			file >> matriza[i][j];
 		}
 	}
 }
 
-string mart_str_out(matrtype matr, int str, int stolb, unsigned short* shirina = NULL, string* razdelit_strok = NULL, int* format_flags = NULL, char* fill = NULL, unsigned short* tochnost = NULL) {
+
+string mart_str_out(matrtype matriza, int stroka, int stolbec, unsigned short* shirina = NULL, string* razdelitel_strok = NULL, int* formatirovanye_flagov = NULL, char* prvo_mezhd_symb = NULL, unsigned short* tochnost = NULL) {
 	stringstream ss;
 	int bit_mask = 0;
-	if (*format_flags & ios::adjustfield)
+	if (*formatirovanye_flagov & ios::adjustfield)
 		bit_mask = bit_mask | ios::adjustfield;
-	if (*format_flags & ios::basefield)
-		bit_mask = bit_mask | ios::basefield;
-	if (*format_flags & ios::floatfield)
-		bit_mask = bit_mask | ios::floatfield;
 
 	if (!shirina) {
 		unsigned short t = 10;
 		shirina = &t;
 	}
-	if (!razdelit_strok) {
+	if (!razdelitel_strok) {
 		string t = "\n";
-		razdelit_strok = &t;
+		razdelitel_strok = &t;
 	}
-	if (!fill) {
+	if (!prvo_mezhd_symb) {
 		char t = ' ';
-		fill = &t;
+		prvo_mezhd_symb = &t;
 	}
 	if (!tochnost) {
 		unsigned short t = 5;
 		tochnost = &t;
 	}
 
-	ss.setf(*format_flags, *format_flags | bit_mask);
-	for (int i = 0; i < str; i++) {
-		for (int j = 0; j < stolb; j++) {
-			ss << setw(*shirina) << setfill(*fill) << setprecision(*tochnost) << matr[i][j];
+	ss.setf(*formatirovanye_flagov, *formatirovanye_flagov | bit_mask);
+	for (int i = 0; i < stroka; i++) {
+		for (int j = 0; j < stolbec; j++) {
+			ss << setw(*shirina) << setfill(*prvo_mezhd_symb) << setprecision(*tochnost) << matriza[i][j];
 		}
-		ss << *razdelit_strok;
+		ss << *razdelitel_strok;
 	}
 	return ss.str();
 }
 
-int poisk_oshibok(ifstream& file, int& str, int& stolb, errUnion* oshib = NULL) {
+
+int poisk_oshibok(ifstream& file, int& stroka, int& stolbec, error_checker_union* oshibka = NULL) {
+
 	bool flag = false;
 	int number = 0;
 	int place = 0;
 	int place2 = 0;
 	elemtype d;
 	string er, num;
+
 	while (!(file >> ws).eof())
 	{
 		place2 = file.tellg();
@@ -117,77 +106,83 @@ int poisk_oshibok(ifstream& file, int& str, int& stolb, errUnion* oshib = NULL) 
 			ss2 >> d;
 			if (!ss2.eof() || ss2.fail())
 			{
-				if (oshib) {
-					(*oshib).nomer_str = str;
-					(*oshib).nomer_elem = number;
-					(*oshib).plase = place;
-					*(*oshib).posled = er;
-					return false_zhach;
+				if (oshibka) {
+					(*oshibka).nomer_stroki = stroka;
+					(*oshibka).nomer_elementa = number;
+					(*oshibka).place_error = place;
+					*(*oshibka).posled = er;
+					return nevern_znachenie_case;
 				}
 				else
-					return file_error;
+					return oshibka_file_case;
 			}
 			number++;
 		}
 
-		if (str >= 1 && number != stolb) {
-			if (oshib) {
-				(*oshib).nepryam = str;
-				return nepryam;
+		if (stroka >= 1 && number != stolbec) {
+			if (oshibka) {
+				(*oshibka).nepryamougolnaya = stroka;
+				return nepryamoug_case;
 			}
 			else
-				return file_error;
+				return oshibka_file_case;
 		}
-		str++;
-		stolb = number;
+
+		stroka++;
+		stolbec = number;
 		number = 0;
 	}
-	if (str == 0) {
-		return nodata;
+
+	if (stroka == 0) {
+		return net_dannh_case;
 	}
+
 	file.clear();
-	return good;
+	return good_case;
 }
 
-void delete_matr(matrtype matr, int str) {
-	for (int i = 0; i < str; i++)
-		delete[] matr[i];
-	delete[] matr;
+
+void delete_matr(matrtype matriza, int stroka) {
+	for (int i = 0; i < stroka; i++)
+		delete[] matriza[i];
+	delete[] matriza;
 }
 
-matrtype videl_pam(matrtype& matr, int str, int stolb, int* number = NULL) {
-	matr = NULL;
-	int n = -1;
+matrtype videl_pam(matrtype& matriza, int stroka, int stolbec, int* number = NULL) {
+	matriza = NULL;
+	int str_elem_peredacha = -1;
+
 	try {
-		matr = new elemtype * [str];
-		for (n = 0; n < str; n++)
-			matr[n] = new elemtype[stolb];
+		matriza = new elemtype * [stroka];
+		for (str_elem_peredacha = 0; str_elem_peredacha < stroka; str_elem_peredacha++)
+			matriza[str_elem_peredacha] = new elemtype[stolbec];
 	}
 	catch (...)
 	{
-		delete_matr(matr, n);
+		delete_matr(matriza, str_elem_peredacha);
 		if (number)
-			*number = n;
+			*number = str_elem_peredacha;
 	}
-	return matr;
+
+	return matriza;
 }
 
-bool obrabot_matr(matrtype& matr, int str, int stolb, const elemtype& A) {
 
+bool obrabot_matr(matrtype& matriza, int stroka, int stolbec, const elemtype& summa_str_i_stlb) {
 	int proizved = 1;
 
-	for (int i = 0; i < str; i++) {
-		for (int j = 0; j < stolb; j++) {
-			if (i + j +2== A) {//тк начинается с нуля
-				proizved *= matr[i][j];
+	for (int i = 0; i < stroka; i++) {
+		for (int j = 0; j < stolbec; j++) {
+			if (i + j+2== summa_str_i_stlb) {//тк начинается с нуля
+				proizved *= matriza[i][j];
 			}
 		}
 	}
 
-	for (int i = 0; i < str; i++) {
-		for (int j = 0; j < stolb; j++) {
-			if (stolb-j==1) {
-				matr[i][j]=proizved;
+	for (int i = 0; i < stroka; i++) {
+		for (int j = 0; j < stolbec; j++) {
+			if (stolbec-j==1) {
+				matriza[i][j]=proizved;
 			}
 		}
 	}
@@ -195,116 +190,126 @@ bool obrabot_matr(matrtype& matr, int str, int stolb, const elemtype& A) {
 	return true;
 }
 
-int zagryzka_is_fila(const string& name, matrtype& matr, int& str, int& stolb, errUnion* oshib = NULL) {
+
+int zagryzka_is_fila(const string& file_name, matrtype& matriza, int& stroka, int& stolbec, error_checker_union* oshibka = NULL) {
 	ifstream f1;
-	f1.open(name);
+	f1.open(file_name);
 
 	if (!f1.is_open()) {
-		if (oshib)
-			(*oshib).problem_otkr = errno;
-		return oshib_otkr;
+		if (oshibka)
+			(*oshibka).problema_otkrytia = errno;
+		return oshibka_otkrtia_case;
 	}
 
-	str = 0;
-	stolb = 0;
+	stroka = 0;
+	stolbec = 0;
 	int err;
-	err = poisk_oshibok(f1, str, stolb, oshib);
-
+	err = poisk_oshibok(f1, stroka, stolbec, oshibka);
 	if (err) {
 		f1.close();
 		return err;
 	}
 
-	videl_pam(matr, str, stolb, (*oshib).nomerstr);
-	if (!matr) {
+	videl_pam(matriza, stroka, stolbec, (*oshibka).nomer_stroki_ukaz);
+
+	if (!matriza) {
 		f1.close();
-		if ((*oshib).nomerstr) {
-			switch (*(*oshib).nomerstr) {
+		if ((*oshibka).nomer_stroki_ukaz) {
+			switch (*(*oshibka).nomer_stroki_ukaz) {
 			case -1:
-				return mass_pointer;
+				return massiv_ukazatel;
 			default:
-				return mass_rows;
+				return massiv_stroki;
 			}
 		}
-		return unerror;
+		return net_oshidki_case;
 	}
-	zagruzka_matr(f1, matr, str, stolb);
+
+	zagruzka_matr(f1, matriza, stroka, stolbec);
 	f1.close();
-	return good;
+
+	return good_case;
 }
+
 
 /*В матрице найти произведение тех её элементов, 
 сумма номеров строки и столбца которых равна числу A. 
 Заменить на полученное произведение последний столбец матрицы.*/
+
 
 int main()
 {
 	system("chcp 1251");
 	while (true)
 	{
-		string name;
+		string file_name;
 		ifstream f1;
+
 		cin.ignore(cin.rdbuf()->in_avail());
 		cout << "Введите название файла, или \"*\" для выхода из программы." << "\n";
-		getline(cin, name);
-		if (name == "*")
+		getline(cin, file_name);
+		if (file_name == "*")
 			break;
 
 		string er;
-		int  ctr, ctolb, error;
-		matrtype matr;
-		errUnion oshib;
-		oshib.posled = &er;
-		error = zagryzka_is_fila(name, matr, ctr, ctolb, &oshib);
+		int  ctroka, ctolbec, error;
+		matrtype matriza;
+		error_checker_union oshibka;
+		oshibka.posled = &er;
+
+		error = zagryzka_is_fila(file_name, matriza, ctroka, ctolbec, &oshibka);
+
 		if (error) {
 			switch (error)
 			{
-			case oshib_otkr:
+			case oshibka_otkrtia_case:
 #pragma warning(suppress : 4996)
-				cout << "Файл с названием \"" << name << "\" не может быть открыт: " << strerror(errno) << " \n";
+				cout << "Файл с названием \"" << file_name << "\" не может быть открыт: " << strerror(errno) << " \n";
 				break;
-			case false_zhach:
-				cout << "Неверное значение. Строка: " << oshib.nomer_str + 1 << " Элемент: " << oshib.nomer_elem + 1 << " \"" << er << "\"" << " Абсолютная позиция первого символа некорректного значения: " << oshib.plase << '\n';
+			case nevern_znachenie_case:
+				cout << "Неверное значение. Строка: " << oshibka.nomer_stroki + 1 << " Элемент: " << oshibka.nomer_elementa + 1 << " \"" << er << "\"" << " Абсолютная позиция первого символа некорректного значения: " << oshibka.place_error << '\n';
 				break;
-			case nepryam:
-				cout << "Матрица не прямоугольная. Строка: " << oshib.nepryam + 1 << '\n';
+			case nepryamoug_case:
+				cout << "Матрица не прямоугольная. Строка: " << oshibka.nepryamougolnaya + 1 << '\n';
 				break;
-			case nodata:
-				cout << "Файл с названием \"" << name << "\" не содержит данных. " << '\n';
+			case net_dannh_case:
+				cout << "Файл с названием \"" << file_name << "\" не содержит данных. " << '\n';
 				break;
-			case mass_pointer:
+			case massiv_ukazatel:
 				cout << "Bозникла ошибка при выделении памяти под массив указателей. " << '\n';
 				break;
-			case mass_rows:
-				cout << "Возникла ошибка при выделении памяти под строку номер. " << *oshib.nomerstr + 1 << '\n';
+			case massiv_stroki:
+				cout << "Возникла ошибка при выделении памяти под строку номер. " << *oshibka.nomer_stroki_ukaz + 1 << '\n';
 				break;
-			case unerror:
+			case net_oshidki_case:
 				cout << "Возникла ошибка при выделении памяти. " << '\n';
 				break;
-			case file_error:
-				cout << "Файл с названием \"" << name << "\" содержит некорректные данные. " << '\n';
+			case oshibka_file_case:
+				cout << "Файл с названием \"" << file_name << "\" содержит некорректные данные. " << '\n';
 			}
 			continue;
 		}
+
 		int format_flags = ios::dec | ios::right;
 		unsigned short shirina = 10;
 		string razdelit = "\n";
 		char fill = ' ';
 		unsigned short tochnost = 5;
-		cout << mart_str_out(matr, ctr, ctolb, &shirina, &razdelit, &format_flags/*&fill,&tochnost*/);
-		elemtype A;
-		bool flag = false;
+		cout << mart_str_out(matriza, ctroka, ctolbec, &shirina, &razdelit, &format_flags);//сюда же можно fill и precision, но не является ли это дописыванием вывода в функции?
+		elemtype summa_str_i_stlb;
+		bool nevernoe_znacheniye = false;
+
 		cout << "Введите значение суммы строк и столбцов или \"*\" для выхода в меню." << "\n";
 		while (true)
 		{
 			cin.ignore(cin.rdbuf()->in_avail());
 			if (cin.peek() == '*' && (cin.rdbuf()->in_avail()) == 2)
 			{
-				flag = true;
+				nevernoe_znacheniye = true;
 				break;
 			}
-			cin >> A;
-			if ((cin.peek() != '\n') || A == 0 || ctr + ctolb < A)
+			cin >> summa_str_i_stlb;
+			if ((cin.peek() != '\n') || ctroka + ctolbec < summa_str_i_stlb || summa_str_i_stlb<2)
 			{
 				cout << "Невозможно использовать данное значение, повторите ввод или введите \"*\" для выхода в меню. " << "\n";
 				cin.clear();
@@ -313,17 +318,17 @@ int main()
 			}
 			break;
 		}
-		if (flag)
+		if (nevernoe_znacheniye)
 			continue;
 
-		if (!obrabot_matr(matr, ctr, ctolb, A)) {
+		if (!obrabot_matr(matriza, ctroka, ctolbec, summa_str_i_stlb)) {
 			cout << "Возникла ошибка при выделении памяти под массив.";
-			delete_matr(matr, ctr);
+			delete_matr(matriza, ctroka);
 			continue;
 		}
 
-		cout << mart_str_out(matr, ctr, ctolb, &shirina, &razdelit, &format_flags);
+		cout << mart_str_out(matriza, ctroka, ctolbec, &shirina, &razdelit, &format_flags);
 
-		delete_matr(matr, ctr);
+		delete_matr(matriza, ctroka);
 	}
 }

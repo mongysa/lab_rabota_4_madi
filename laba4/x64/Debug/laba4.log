@@ -1,5 +1,1 @@
-﻿  laba4.cpp
-D:\laba4\laba4\laba4.cpp(108,22): warning C4244: =: преобразование "std::streamoff" в "int", возможна потеря данных
-D:\laba4\laba4\laba4.cpp(114,19): warning C4244: =: преобразование "std::streamoff" в "int", возможна потеря данных
-D:\laba4\laba4\laba4.cpp(182,26): warning C4244: *=: преобразование "elemtype" в "int", возможна потеря данных
-  laba4.vcxproj -> D:\laba4\x64\Debug\laba4.exe
+﻿  laba4.vcxproj -> D:\лаб_работа№4_мади — копия\x64\Debug\laba4.exe
