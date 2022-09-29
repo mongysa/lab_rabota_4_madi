@@ -8,8 +8,8 @@
 using namespace std;
 
 
-typedef double elemtype;
-typedef elemtype** matrtype;
+typedef double element_type;
+typedef element_type** matiza_type;
 
 
 union error_checker_union
@@ -39,7 +39,7 @@ enum error_checker {
 };
 
 
-void zagruzka_matr(ifstream& file, matrtype matriza, int stroka, int stolbec) {
+void zagruzka_matrizy(ifstream& file, matiza_type matriza, int stroka, int stolbec) {
 	file.seekg(0);
 	for (int i = 0; i < stroka; i++) {
 		for (int j = 0; j < stolbec; j++) {
@@ -49,7 +49,7 @@ void zagruzka_matr(ifstream& file, matrtype matriza, int stroka, int stolbec) {
 }
 
 
-string mart_str_out(matrtype matriza, int stroka, int stolbec, unsigned short* shirina = NULL, string* razdelitel_strok = NULL, int* formatirovanye_flagov = NULL, char* prvo_mezhd_symb = NULL, unsigned short* tochnost = NULL) {
+string vyvod_matryzy(matiza_type matriza, int stroka, int stolbec, unsigned short* shirina = NULL, string* razdelitel_strok = NULL, int* formatirovanye_flagov = NULL, char* prvo_mezhd_symb = NULL, unsigned short* tochnost = NULL) {
 	stringstream ss;
 	int bit_mask = 0;
 	if (*formatirovanye_flagov & ios::adjustfield)
@@ -89,7 +89,7 @@ int poisk_oshibok(ifstream& file, int& stroka, int& stolbec, error_checker_union
 	int number = 0;
 	int place = 0;
 	int place2 = 0;
-	elemtype d;
+	element_type d;
 	string er, num;
 
 	while (!(file >> ws).eof())
@@ -142,24 +142,24 @@ int poisk_oshibok(ifstream& file, int& stroka, int& stolbec, error_checker_union
 }
 
 
-void delete_matr(matrtype matriza, int stroka) {
+void udaleniye_matrizy(matiza_type matriza, int stroka) {
 	for (int i = 0; i < stroka; i++)
 		delete[] matriza[i];
 	delete[] matriza;
 }
 
-matrtype videl_pam(matrtype& matriza, int stroka, int stolbec, int* number = NULL) {
+matiza_type videleniye_pamyaty(matiza_type& matriza, int stroka, int stolbec, int* number = NULL) {
 	matriza = NULL;
 	int str_elem_peredacha = -1;
 
 	try {
-		matriza = new elemtype * [stroka];
+		matriza = new element_type * [stroka];
 		for (str_elem_peredacha = 0; str_elem_peredacha < stroka; str_elem_peredacha++)
-			matriza[str_elem_peredacha] = new elemtype[stolbec];
+			matriza[str_elem_peredacha] = new element_type[stolbec];
 	}
 	catch (...)
 	{
-		delete_matr(matriza, str_elem_peredacha);
+		udaleniye_matrizy(matriza, str_elem_peredacha);
 		if (number)
 			*number = str_elem_peredacha;
 	}
@@ -168,7 +168,7 @@ matrtype videl_pam(matrtype& matriza, int stroka, int stolbec, int* number = NUL
 }
 
 
-bool obrabot_matr(matrtype& matriza, int stroka, int stolbec, const elemtype& summa_str_i_stlb) {
+bool obrabotka_matrizy(matiza_type& matriza, int stroka, int stolbec, const element_type& summa_str_i_stlb) {
 	int proizved = 1;
 
 	for (int i = 0; i < stroka; i++) {
@@ -191,7 +191,7 @@ bool obrabot_matr(matrtype& matriza, int stroka, int stolbec, const elemtype& su
 }
 
 
-int zagryzka_is_fila(const string& file_name, matrtype& matriza, int& stroka, int& stolbec, error_checker_union* oshibka = NULL) {
+int zagryzka_is_fila(const string& file_name, matiza_type& matriza, int& stroka, int& stolbec, error_checker_union* oshibka = NULL) {
 	ifstream f1;
 	f1.open(file_name);
 
@@ -210,7 +210,7 @@ int zagryzka_is_fila(const string& file_name, matrtype& matriza, int& stroka, in
 		return err;
 	}
 
-	videl_pam(matriza, stroka, stolbec, (*oshibka).nomer_stroki_ukaz);
+	videleniye_pamyaty(matriza, stroka, stolbec, (*oshibka).nomer_stroki_ukaz);
 
 	if (!matriza) {
 		f1.close();
@@ -225,7 +225,7 @@ int zagryzka_is_fila(const string& file_name, matrtype& matriza, int& stroka, in
 		return net_oshidki_case;
 	}
 
-	zagruzka_matr(f1, matriza, stroka, stolbec);
+	zagruzka_matrizy(f1, matriza, stroka, stolbec);
 	f1.close();
 
 	return good_case;
@@ -253,7 +253,7 @@ int main()
 
 		string er;
 		int  ctroka, ctolbec, error;
-		matrtype matriza;
+		matiza_type matriza;
 		error_checker_union oshibka;
 		oshibka.posled = &er;
 
@@ -295,8 +295,8 @@ int main()
 		string razdelit = "\n";
 		char fill = ' ';
 		unsigned short tochnost = 5;
-		cout << mart_str_out(matriza, ctroka, ctolbec, &shirina, &razdelit, &format_flags);//сюда же можно fill и precision, но не является ли это дописыванием вывода в функции?
-		elemtype summa_str_i_stlb;
+		cout << vyvod_matryzy(matriza, ctroka, ctolbec, &shirina, &razdelit, &format_flags);//сюда же можно fill и precision, но не является ли это дописыванием вывода в функции?
+		element_type summa_str_i_stlb;
 		bool nevernoe_znacheniye = false;
 
 		cout << "Введите значение суммы строк и столбцов или \"*\" для выхода в меню." << "\n";
@@ -321,14 +321,14 @@ int main()
 		if (nevernoe_znacheniye)
 			continue;
 
-		if (!obrabot_matr(matriza, ctroka, ctolbec, summa_str_i_stlb)) {
+		if (!obrabotka_matrizy(matriza, ctroka, ctolbec, summa_str_i_stlb)) {
 			cout << "Возникла ошибка при выделении памяти под массив.";
-			delete_matr(matriza, ctroka);
+			udaleniye_matrizy(matriza, ctroka);
 			continue;
 		}
 
-		cout << mart_str_out(matriza, ctroka, ctolbec, &shirina, &razdelit, &format_flags);
+		cout << vyvod_matryzy(matriza, ctroka, ctolbec, &shirina, &razdelit, &format_flags);
 
-		delete_matr(matriza, ctroka);
+		udaleniye_matrizy(matriza, ctroka);
 	}
 }
